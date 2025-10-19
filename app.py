@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for
 import requests
 import logging
+import time
 
 app = Flask(__name__)
 
@@ -10,12 +11,20 @@ logging.basicConfig(level=logging.INFO)
 # Replace with your OpenWeather API key
 OPENWEATHER_API_KEY = "10f06fb8ffb771edcc0e37142cc5f021"
 
+app_start_time = time.time()
+last_successful_fetch = None
+
+def update_last_successful_fetch():
+    global last_successful_fetch
+    last_successful_fetch = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
+
 def get_weather(city):
     url = f"https://api.openweathermap.org/data/2.5/weather?q={city}&appid={OPENWEATHER_API_KEY}&units=metric"
     try:
         response = requests.get(url)
         response.raise_for_status()
         data = response.json()
+        update_last_successful_fetch()
         return {
             "name": data["name"],
             "temp": data["main"]["temp"],
@@ -35,6 +44,7 @@ def get_forecast(city):
         response = requests.get(url)
         response.raise_for_status()
         data = response.json()
+        update_last_successful_fetch()
         # Group by day, get high/low and icon for each day
         forecast = []
         days = {}
@@ -73,6 +83,15 @@ def index():
         else:
             error = "Please enter a city name."
     return render_template("index.html", weather=weather, forecast=forecast, error=error)
+
+@app.route("/health")
+def health():
+    uptime = int(time.time() - app_start_time)
+    return {
+        "status": "ok",
+        "uptime_seconds": uptime,
+        "last_successful_fetch": last_successful_fetch
+    }
 
 if __name__ == "__main__":
     app.run(debug=True)
