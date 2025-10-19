@@ -2,14 +2,18 @@ from flask import Flask, render_template, request, redirect, url_for
 import requests
 import logging
 import time
+import os
+from dotenv import load_dotenv
+
+# This loads variables from .env into environment
+load_dotenv()
 
 app = Flask(__name__)
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 
-# Replace with your OpenWeather API key
-OPENWEATHER_API_KEY = "10f06fb8ffb771edcc0e37142cc5f021"
+OPENWEATHER_API_KEY = os.environ.get("OPENWEATHER_API_KEY")
 
 app_start_time = time.time()
 last_successful_fetch = None
