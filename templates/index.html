@@ -2,20 +2,48 @@
 <html>
 <head>
     <title>Weather Dashboard</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
 </head>
-<body>
-    <h1>Weather Dashboard</h1>
-    <form method="POST">
-        <input type="text" name="city" placeholder="Enter city name" required>
-        <button type="submit">Get Weather</button>
-    </form>
-    {% if error %}
-        <p style="color:red;">{{ error }}</p>
-    {% endif %}
-    {% if weather %}
-        <h2>Weather in {{ weather.name }}</h2>
-        <p>Temperature: {{ weather.main.temp }} °C</p>
-        <p>Condition: {{ weather.weather[0].description }}</p>
-    {% endif %}
+<body class="bg-light">
+    <div class="container py-5">
+        <h1 class="mb-4 text-center">Weather Dashboard</h1>
+        <form method="POST" class="mb-4 d-flex justify-content-center">
+            <input type="text" name="city" class="form-control w-25 me-2" placeholder="Enter city name" required>
+            <button type="submit" class="btn btn-primary">Get Weather</button>
+        </form>
+        {% if error %}
+            <div class="alert alert-danger text-center">{{ error }}</div>
+        {% endif %}
+        {% if weather %}
+            <div class="card mb-4 mx-auto" style="max-width: 400px;">
+                <div class="card-body text-center">
+                    <h2 class="card-title">{{ weather.name }}</h2>
+                    <img src="https://openweathermap.org/img/wn/{{ weather.icon }}@2x.png" alt="icon">
+                    <p class="card-text">Temperature: {{ weather.temp }} °C</p>
+                    <p class="card-text">Feels Like: {{ weather.feels_like }} °C</p>
+                    <p class="card-text">Condition: {{ weather.condition }}</p>
+                    <p class="card-text">Humidity: {{ weather.humidity }}%</p>
+                    <p class="card-text">Wind Speed: {{ weather.wind_speed }} m/s</p>
+                </div>
+            </div>
+        {% endif %}
+        {% if forecast %}
+            <h3 class="mb-3 text-center">Forecast for the next 5 days</h3>
+            <div class="row justify-content-center">
+                {% for day in forecast %}
+                    <div class="col-md-2 col-6 mb-3">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <h5 class="card-title">{{ day.date }}</h5>
+                                <img src="https://openweathermap.org/img/wn/{{ day.icon }}@2x.png" alt="icon">
+                                <p>High: {{ day.temp_max }} °C</p>
+                                <p>Low: {{ day.temp_min }} °C</p>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
 </body>
 </html>
