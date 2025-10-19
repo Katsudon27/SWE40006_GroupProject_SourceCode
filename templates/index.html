@@ -31,11 +31,11 @@
             <h3 class="mb-3 text-center">Forecast for the next 5 days</h3>
             <div class="row justify-content-center">
                 {% for day in forecast %}
-                    <div class="col-md-2 col-6 mb-3">
-                        <div class="card text-center">
-                            <div class="card-body">
+                    <div class="col-12 col-sm-6 col-md-4 col-lg-2 mb-3">
+                        <div class="card text-center h-100">
+                            <div class="card-body d-flex flex-column align-items-center">
                                 <h5 class="card-title">{{ day.date }}</h5>
-                                <img src="https://openweathermap.org/img/wn/{{ day.icon }}@2x.png" alt="icon">
+                                <img src="https://openweathermap.org/img/wn/{{ day.icon }}@2x.png" alt="icon" class="mb-2" style="width:60px;height:60px;">
                                 <p>High: {{ day.temp_max }} °C</p>
                                 <p>Low: {{ day.temp_min }} °C</p>
                             </div>
