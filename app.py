@@ -15,24 +15,64 @@ def get_weather(city):
     try:
         response = requests.get(url)
         response.raise_for_status()
-        return response.json()
+        data = response.json()
+        return {
+            "name": data["name"],
+            "temp": data["main"]["temp"],
+            "feels_like": data["main"]["feels_like"],
+            "condition": data["weather"][0]["description"],
+            "icon": data["weather"][0]["icon"],
+            "humidity": data["main"]["humidity"],
+            "wind_speed": data["wind"]["speed"]
+        }
     except requests.RequestException as e:
         logging.error(f"API request failed: {e}")
+        return None
+
+def get_forecast(city):
+    url = f"https://api.openweathermap.org/data/2.5/forecast?q={city}&appid={OPENWEATHER_API_KEY}&units=metric"
+    try:
+        response = requests.get(url)
+        response.raise_for_status()
+        data = response.json()
+        # Group by day, get high/low and icon for each day
+        forecast = []
+        days = {}
+        for entry in data["list"]:
+            date = entry["dt_txt"].split(" ")[0]
+            temp = entry["main"]["temp"]
+            icon = entry["weather"][0]["icon"]
+            if date not in days:
+                days[date] = {"temps": [], "icons": []}
+            days[date]["temps"].append(temp)
+            days[date]["icons"].append(icon)
+        for date, info in list(days.items())[:5]:
+            forecast.append({
+                "date": date,
+                "temp_min": min(info["temps"]),
+                "temp_max": max(info["temps"]),
+                "icon": info["icons"][0]
+            })
+        return forecast
+    except requests.RequestException as e:
+        logging.error(f"Forecast API request failed: {e}")
         return None
 
 @app.route("/", methods=["GET", "POST"])
 def index():
     weather = None
+    forecast = None
     error = None
     if request.method == "POST":
         city = request.form.get("city")
         if city:
             weather = get_weather(city)
-            if not weather:
-                error = "Could not fetch weather data. Please try again."
+            forecast = get_forecast(city)
+            if not weather or not forecast:
+                error = "Could not fetch weather data. Please check the city name or try again later."
         else:
             error = "Please enter a city name."
-    return render_template("index.html", weather=weather, error=error)
+    return render_template("index.html", weather=weather, forecast=forecast, error=error)
 
 if __name__ == "__main__":
     app.run(debug=True)
