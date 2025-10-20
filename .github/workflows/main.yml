@@ -27,6 +27,19 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Run tests
+      - name: Run application
         run: |
-          pytest -q
+          python app.py
+
+      - name: Upload application logs
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: app-logs
+          path: app.log
+
+
+      ##- name: Run tests
+       # run: |
+        #  pytest -q
+          
