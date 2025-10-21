@@ -44,8 +44,8 @@ jobs:
               
       - name: Build and push Docker image (GitHub Container Registry)
         run: |
-                IMAGE_NAME=ghcr.io/${{ github.repository }}/weather-dashboard:latest
-                docker build --build-arg OPENWEATHER_API_KEY=${{ secrets.OPENWEATHER_API_KEY }} -t $IMAGE_NAME .
-                docker push $IMAGE_NAME
+          IMAGE_NAME=ghcr.io/katsudon27/swe40006_groupproject_sourcecode/weather-dashboard:latest
+          docker build --build-arg OPENWEATHER_API_KEY=${{ secrets.OPENWEATHER_API_KEY }} -t $IMAGE_NAME .
+          docker push $IMAGE_NAME
 
    
