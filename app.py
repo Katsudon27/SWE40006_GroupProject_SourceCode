@@ -13,7 +13,9 @@ app = Flask(__name__)
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 
-OPENWEATHER_API_KEY = os.environ.get("OPENWEATHER_API_KEY")
+OPENWEATHER_API_KEY = (os.environ.get("OPENWEATHER_API_KEY") or "").strip()
+requests.get(url, params={"q": city, "appid": OPENWEATHER_API_KEY, "units": "metric"})
+
 
 app_start_time = time.time()
 last_successful_fetch = None
