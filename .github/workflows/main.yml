@@ -35,6 +35,11 @@ jobs:
         run: |
                 echo "Running Flask build check..."
                 python -m flask --version
+
+      - name: Run tests
+        run: |
+                echo "Running tests..."
+                pytest
               
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
