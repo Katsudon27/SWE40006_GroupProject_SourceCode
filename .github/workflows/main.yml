@@ -66,22 +66,29 @@ jobs:
           exit 1
 
   deploy:
+    name: Deploy to EC2
     runs-on: ubuntu-latest
     needs: test
     steps:
       - name: SSH deploy
+    # v1.0.0 or latest stable
         uses: appleboy/ssh-action@v1.0.0
         env:
           PROD_API_KEY: ${{ secrets.PROD_API_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_SSH_KEY }}
+          host: ${{ secrets.EC2_HOST }}     # e.g., 52.207.61.168
+          username: ${{ secrets.EC2_USER }} # 'ubuntu' for Ubuntu AMI
+          key: ${{ secrets.EC2_SSH_KEY }}   # paste PEM contents as secret
           envs: PROD_API_KEY,GITHUB_TOKEN,${{ github.actor }}
           script: |
             export PROD_API_KEY="$PROD_API_KEY"
             export GITHUB_TOKEN="$GITHUB_TOKEN"
             export GITHUB_ACTOR="${{ github.actor }}"
             bash ~/deploy.sh
+    
+
+
+    
+
 
