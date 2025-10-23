@@ -1,55 +1,71 @@
+name: CI/CD - Weather Dashboard
+
 on:
   push:
     branches: [ main ]
-  pull_request:
-    branches: [ main ]
+  workflow_dispatch:
 
 permissions:
   contents: read
   packages: write
+  deployments: write
 
 jobs:
   build:
     runs-on: ubuntu-latest
-
-    env:
-      OPENWEATHER_API_KEY: ${{ secrets.OPENWEATHER_API_KEY }}
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-              
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-            python-version: '3.11'
-
-              
-      - name: Install dependencies
-        run: |
-                python -m pip install --upgrade pip
-                pip install -r requirements.txt
-
-      - name: Verify application build
-        run: |
-                echo "Running Flask build check..."
-                python -m flask --version
-
-              # ---------- OPTION 1: Build & Push Docker image to GitHub Container Registry ----------
-              
-      - name: Log in to GitHub Container Registry
+      - uses: actions/checkout@v4
+      - name: Login to GHCR
         uses: docker/login-action@v3
         with:
-                registry: ghcr.io
-                username: ${{ github.actor }}
-                password: ${{ secrets.GITHUB_TOKEN }}
-
-              
-      - name: Build and push Docker image (GitHub Container Registry)
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build & Push
         run: |
-          IMAGE_NAME=ghcr.io/katsudon27/swe40006_groupproject_sourcecode/weather-dashboard:latest
-          docker build --build-arg OPENWEATHER_API_KEY=${{ secrets.OPENWEATHER_API_KEY }} -t $IMAGE_NAME .
-          docker push $IMAGE_NAME
+          IMAGE=ghcr.io/katsudon27/swe40006_groupproject_sourcecode/weather-dashboard:latest
+          docker build -t $IMAGE .
+          docker push $IMAGE
 
-   
+  test:
+    runs-on: ubuntu-latest
+    needs: build
+    env:
+      OPENWEATHER_API_KEY: ${{ secrets.OPENWEATHER_API_KEY }}   # test key
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      - name: Start app (bg)
+        run: |
+          export OPENWEATHER_API_KEY="${{ env.OPENWEATHER_API_KEY }}"
+          python app.py &    # fine for smoke tests
+          sleep 5
+      - name: Smoke checks
+        run: |
+          curl -f http://127.0.0.1:5000/health
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - name: SSH deploy
+        uses: appleboy/ssh-action@v1.0.0
+        env:
+          PROD_API_KEY: ${{ secrets.PROD_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}        # ubuntu
+          key: ${{ secrets.EC2_SSH_KEY }}          # PEM contents
+          envs: PROD_API_KEY,GITHUB_TOKEN,${{ github.actor }}
+          script: |
+            export PROD_API_KEY="$PROD_API_KEY"
+            export GITHUB_TOKEN="$GITHUB_TOKEN"
+            export GITHUB_ACTOR="${{ github.actor }}"
+            bash ~/deploy.sh
