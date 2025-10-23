@@ -61,6 +61,38 @@ jobs:
         run: |
           pytest tests/integration/ -v --tb=short
 
+      - name: Run Real API Integration Test
+        env:
+          OPENWEATHER_API_KEY: ${{ secrets.OPENWEATHER_API_KEY }}
+        run: |
+          export OPENWEATHER_API_KEY="${{ secrets.OPENWEATHER_API_KEY }}"
+          python -c "
+          from app import get_weather, get_forecast
+          import sys
+
+          print('Testing real API call to get_weather()...')
+          weather = get_weather('Melbourne')
+          if weather is None:
+              print('ERROR: get_weather() returned None')
+              sys.exit(1)
+          if 'temp' not in weather or 'name' not in weather:
+              print('ERROR: Invalid weather data structure')
+              sys.exit(1)
+          print(f'✓ Successfully fetched weather for {weather[\"name\"]}: {weather[\"temp\"]}°C')
+
+          print('Testing real API call to get_forecast()...')
+          forecast = get_forecast('Melbourne')
+          if forecast is None:
+              print('ERROR: get_forecast() returned None')
+              sys.exit(1)
+          if len(forecast) < 1:
+              print('ERROR: Forecast data is empty')
+              sys.exit(1)
+          print(f'✓ Successfully fetched {len(forecast)}-day forecast')
+
+          print('✓ Real API integration tests passed!')
+          "
+
       - name: Generate Coverage Report
         run: |
           pytest tests/ --cov=app --cov-report=html --cov-report=xml --cov-report=term | tee coverage-summary.txt
