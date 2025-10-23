@@ -55,11 +55,11 @@ jobs:
 
       - name: Run Unit Tests
         run: |
-          pytest tests/unit/ -v --tb=short
+          pytest tests/unit/ -v --tb=short --no-cov
 
       - name: Run Integration Tests
         run: |
-          pytest tests/integration/ -v --tb=short
+          pytest tests/integration/ -v --tb=short --no-cov
 
       - name: Run Real API Integration Test
         env:
