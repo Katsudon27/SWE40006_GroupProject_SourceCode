@@ -51,16 +51,4 @@ jobs:
           docker push $IMAGE_NAME
 
 
-      - name: Build and push Docker image (Docker Hub)
-        uses: docker/build-push-action@v4
-        with:
-                context: .
-                push: true
-                tags: katsudon27/swe40006_groupproject_sourcecode:latest
-                build-args: |
-                  OPENWEATHER_API_KEY=${{ secrets.OPENWEATHER_API_KEY }}
-
-
-      
-
-   
+     
