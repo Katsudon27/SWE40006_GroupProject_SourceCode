@@ -2,6 +2,7 @@
 flask
 requests
 python-dotenv
+gunicorn
 
 # Testing dependencies
 pytest>=7.4.0
