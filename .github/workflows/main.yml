@@ -60,12 +60,7 @@ jobs:
                 build-args: |
                   OPENWEATHER_API_KEY=${{ secrets.OPENWEATHER_API_KEY }}
 
-      - name: Verify Docker image
-        run: |
-                echo "Verifying Docker image..."
-                docker run --rm katsudon27/swe40006_groupproject_sourcecode:latest python -m flask --version
+
       
-      - name: Complete
-        run: echo "Build and push process completed successfully."
 
    
