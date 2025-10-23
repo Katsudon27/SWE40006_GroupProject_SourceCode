@@ -86,9 +86,3 @@ jobs:
             export GITHUB_TOKEN="$GITHUB_TOKEN"
             export GITHUB_ACTOR="${{ github.actor }}"
             bash ~/deploy.sh
-    
-
-
-    
-
-
