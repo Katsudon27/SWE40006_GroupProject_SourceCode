@@ -1,13 +1,42 @@
 # SWE40006_GroupProject_SourceCode
-Source Code for SWE40006 Group Project
+Weather Dashboard - Flask Application with Comprehensive Testing
 
-## Testing
-- To test the app using Docker, run the following commands in your terminal after cloning the repo:
-  - docker build -t weather-dashboard .
-  - docker run -e OPENWEATHER_API_KEY="your_actual_key" -p 5000:5000 weather-dashboard
+## Quick Start
 
-- To test the app locally without docker after cloning the repo:
-  - Run "touch .env" in your directory
-  - Copy and paste the contents of .env.example
-  - Add API key to the .env file
-  - Run "python app.py"
+### Running the App
+
+**Using Docker:**
+```bash
+docker build -t weather-dashboard .
+docker run -e OPENWEATHER_API_KEY="your_actual_key" -p 5000:5000 weather-dashboard
+```
+
+**Locally (without Docker):**
+```bash
+# Create .env file
+touch .env
+# Copy contents from .env.example and add your API key
+
+# Run the app
+python app.py
+```
+
+### Running Tests
+
+**Run all tests:**
+```bash
+pytest
+```
+
+**With coverage:**
+```bash
+pytest --cov=app --cov-report=html
+open htmlcov/index.html  # View coverage report
+```
+
+## Testing Documentation
+
+- **[TESTING_PLAN.md](TESTING_PLAN.md)** - Comprehensive testing strategy
+- **[TESTING_IMPLEMENTATION.md](TESTING_IMPLEMENTATION.md)** - What we built
+- **[TESTING_GUIDE.md](TESTING_GUIDE.md)** - How to use the test suite
+

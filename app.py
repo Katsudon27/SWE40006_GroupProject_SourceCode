@@ -38,6 +38,9 @@ def get_weather(city):
     except requests.RequestException as e:
         logging.error(f"API request failed: {e}")
         return None
+    except (KeyError, IndexError) as e:
+        logging.error(f"Malformed API response: {e}")
+        return None
 
 def get_forecast(city):
     url = "https://api.openweathermap.org/data/2.5/forecast"
@@ -68,6 +71,9 @@ def get_forecast(city):
         return forecast
     except requests.RequestException as e:
         logging.error(f"Forecast API request failed: {e}")
+        return None
+    except (KeyError, IndexError) as e:
+        logging.error(f"Malformed forecast API response: {e}")
         return None
 
 
