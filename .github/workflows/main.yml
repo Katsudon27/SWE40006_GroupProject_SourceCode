@@ -2,7 +2,7 @@ name: CI/CD - Weather Dashboard
 
 on:
   push:
-    branches: [ main, DevOp ]
+    branches: [ main ]
   pull_request:
     branches: [ main ]
   workflow_dispatch:
@@ -46,6 +46,14 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Cache pip dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
         with:
@@ -69,7 +77,7 @@ jobs:
           OPENWEATHER_API_KEY: ${{ secrets.OPENWEATHER_API_KEY }}
         run: |
           export OPENWEATHER_API_KEY="${{ secrets.OPENWEATHER_API_KEY }}"
-          python -c "
+          python - <<'PYCODE'
           import sys
           from app import get_weather, get_forecast
 
