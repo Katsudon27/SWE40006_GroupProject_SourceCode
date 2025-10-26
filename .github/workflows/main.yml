@@ -69,7 +69,7 @@ jobs:
           OPENWEATHER_API_KEY: ${{ secrets.OPENWEATHER_API_KEY }}
         run: |
           export OPENWEATHER_API_KEY="${{ secrets.OPENWEATHER_API_KEY }}"
-          python - <<'PYCODE'
+          python -c "
           import sys
           from app import get_weather, get_forecast
 
