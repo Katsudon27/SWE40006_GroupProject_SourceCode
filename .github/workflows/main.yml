@@ -2,7 +2,7 @@ name: CI/CD - Weather Dashboard
 
 on:
   push:
-    branches: [ main , DevOps ]
+    branches: [ main ]
   pull_request:
     branches: [ main ]
   workflow_dispatch:
@@ -16,21 +16,22 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-    env:
-      OPENWEATHER_API_KEY: ${{ secrets.OPENWEATHER_API_KEY }}
     steps:
       - uses: actions/checkout@v4
       - name: Login to GHCR
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
-          username: ${{ github.actor }}
+          username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Build & Push
-        run: |
-          IMAGE=ghcr.io/katsudon27/swe40006_groupproject_sourcecode/weather-dashboard:latest
-          docker build --build-arg OPENWEATHER_API_KEY="$OPENWEATHER_API_KEY" -t "$IMAGE" .
-          docker push "$IMAGE"
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository }}:latest
+            ghcr.io/${{ github.repository }}:${{ github.sha }}
 
   test:
     runs-on: ubuntu-latest
@@ -55,19 +56,12 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Run Unit Tests
+      - name: Run tests and generate coverage
         run: |
-          pytest tests/unit/ -v --tb=short --no-cov
-
-      - name: Run Integration Tests
-        run: |
-          pytest tests/integration/ -v --tb=short --no-cov
+          pytest tests/ --cov=app --cov-report=xml --cov-report=term-missing | tee coverage-summary.txt
 
       - name: Run Real API Integration Test
-        env:
-          OPENWEATHER_API_KEY: ${{ secrets.OPENWEATHER_API_KEY }}
         run: |
-          export OPENWEATHER_API_KEY="${{ secrets.OPENWEATHER_API_KEY }}"
           python -c "
           from app import get_weather, get_forecast
           import sys
@@ -95,15 +89,11 @@ jobs:
           print('✓ Real API integration tests passed!')
           "
 
-      - name: Generate Coverage Report
-        run: |
-          pytest tests/ --cov=app --cov-report=html --cov-report=xml --cov-report=term | tee coverage-summary.txt
-
       - name: Upload Coverage Reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: coverage-reports-${{ matrix.python-version }}
+          name: coverage-report-${{ matrix.python-version }}
           path: |
             htmlcov/
             coverage.xml
@@ -115,8 +105,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: test-logs-${{ matrix.python-version }}
-          path: |
-            pytest-logs/
+          path: pytest-logs/
+          if-no-files-found: ignore
           retention-days: 90
 
       - name: Check Coverage Threshold
@@ -149,6 +139,7 @@ jobs:
           cat /tmp/app.log || true
           exit 1
 
+
   deploy:
     name: Deploy to EC2
     runs-on: ubuntu-latest
@@ -156,18 +147,12 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     steps:
       - name: SSH deploy
-        # v1.0.0 or latest stable
-        uses: appleboy/ssh-action@v1.0.0
-        env:
-          PROD_API_KEY: ${{ secrets.PROD_API_KEY }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    # v1.0.0 or latest stable
+        uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ secrets.EC2_HOST }}     # e.g., 52.207.61.168
-          username: ${{ secrets.EC2_USER }} # 'ubuntu' for Ubuntu AMI
-          key: ${{ secrets.EC2_SSH_KEY }}   # paste PEM contents as secret
-          envs: PROD_API_KEY,GITHUB_TOKEN,${{ github.actor }}
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          envs: GITHUB_TOKEN,PROD_API_KEY
           script: |
-            export PROD_API_KEY="$PROD_API_KEY"
-            export GITHUB_TOKEN="$GITHUB_TOKEN"
-            export GITHUB_ACTOR="${{ github.actor }}"
             bash ~/deploy.sh
