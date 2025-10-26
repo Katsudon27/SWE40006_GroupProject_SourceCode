@@ -2,7 +2,7 @@ name: CI/CD - Weather Dashboard
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, DevOp ]
   pull_request:
     branches: [ main ]
   workflow_dispatch:
