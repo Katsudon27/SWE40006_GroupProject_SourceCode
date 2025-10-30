@@ -2,20 +2,25 @@ from flask import Flask, render_template, request
 import requests, logging, time, os
 from dotenv import load_dotenv
 
+# Load environment variables from .env file
 load_dotenv()
 app = Flask(__name__)
 logging.basicConfig(level=logging.INFO)
 
+# Get OpenWeather API key from environment
 OPENWEATHER_API_KEY = (os.environ.get("OPENWEATHER_API_KEY") or "").strip()
 
+# Track app start time and last successful API fetch
 app_start_time = time.time()
 last_successful_fetch = None
 
 def update_last_successful_fetch():
+    """Update the timestamp for the last successful API fetch."""
     global last_successful_fetch
     last_successful_fetch = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
 
 def get_weather(city):
+    """Fetch current weather data for a city from OpenWeather API."""
     url = "https://api.openweathermap.org/data/2.5/weather"
     try:
         response = requests.get(url, params={
@@ -43,6 +48,7 @@ def get_weather(city):
         return None
 
 def get_forecast(city):
+    """Fetch 5-day weather forecast for a city from OpenWeather API."""
     url = "https://api.openweathermap.org/data/2.5/forecast"
     try:
         response = requests.get(url, params={
@@ -54,6 +60,8 @@ def get_forecast(city):
         data = response.json()
         update_last_successful_fetch()
         forecast, days = [], {}
+
+        # Group forecast data by date
         for entry in data["list"]:
             date = entry["dt_txt"].split(" ")[0]
             temp = entry["main"]["temp"]
@@ -61,6 +69,8 @@ def get_forecast(city):
             days.setdefault(date, {"temps": [], "icons": []})
             days[date]["temps"].append(temp)
             days[date]["icons"].append(icon)
+
+        # Extract forecast data for the next 5 days
         for date, info in list(days.items())[:5]:
             forecast.append({
                 "date": date,
@@ -79,6 +89,7 @@ def get_forecast(city):
 
 @app.route("/", methods=["GET", "POST"])
 def index():
+    """Main route: handles city input and displays weather/forecast."""
     weather = None
     forecast = None
     error = None
@@ -95,6 +106,7 @@ def index():
 
 @app.route("/health")
 def health():
+    """Health check endpoint that returns app status and uptime."""
     uptime = int(time.time() - app_start_time)
     return {
         "status": "ok",
@@ -103,4 +115,5 @@ def health():
     }
 
 if __name__ == "__main__":
+    # Run the Flask app in debug mode, accessible on all interfaces
     app.run(debug=True, host="0.0.0.0")
